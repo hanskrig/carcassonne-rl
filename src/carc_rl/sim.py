@@ -38,14 +38,6 @@ class CarcassonneSim:
     def legal_actions(self, state: Any) -> list[Any]:
         return adapter.get_legal_actions(state)
 
-    def enumerate_actions(self, state: Any) -> tuple[list[Any], dict[tuple, int]]:
-        """Return actions list and a stable action_id map."""
-        actions = adapter.get_legal_actions(state)
-        action_id_map: dict[tuple, int] = {}
-        for idx, action in enumerate(actions):
-            action_id_map[adapter.action_key(action)] = idx
-        return actions, action_id_map
-
     def step(self, state: Any, action: Any, rng: random.Random | None = None) -> Any:
         del rng
         return adapter.apply_action(state, action)
@@ -55,29 +47,6 @@ class CarcassonneSim:
 
     def outcome(self, state: Any, perspective_player: int) -> float:
         return adapter.outcome(state, perspective_player)
-
-    def heuristic_value(self, state: Any, perspective_player: int) -> float:
-        """Cheap heuristic: score diff minus a small frontier penalty."""
-        score = self.outcome(state, perspective_player)
-        board = getattr(state, "board", None)
-        if board is None:
-            return score
-        rows = len(board)
-        cols = len(board[0]) if rows else 0
-        frontier = 0
-        for r in range(rows):
-            for c in range(cols):
-                if board[r][c] is None:
-                    continue
-                if r > 0 and board[r - 1][c] is None:
-                    frontier += 1
-                if r < rows - 1 and board[r + 1][c] is None:
-                    frontier += 1
-                if c > 0 and board[r][c - 1] is None:
-                    frontier += 1
-                if c < cols - 1 and board[r][c + 1] is None:
-                    frontier += 1
-        return score - 0.01 * frontier
 
     def render_text(self, state: Any) -> str:
         remaining = len(getattr(state, "deck", []))
